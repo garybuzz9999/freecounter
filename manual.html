@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Інструкція парсингу zakaz.ua</title>
+<title>Парсинг бази товарів</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#0f1117;color:#e0e0e0;padding:1.5rem;max-width:800px;margin:0 auto}
@@ -14,27 +14,34 @@ h1{color:#4fc3f7;font-size:22px;margin-bottom:0.5rem;text-align:center}
 .step-title{font-size:16px;font-weight:700;color:#4fc3f7;display:flex;align-items:center;margin-bottom:10px}
 .step-body{font-size:14px;color:#ccc;line-height:1.7}
 .step-body b{color:#fff}
+.stores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.store-badge{background:#0d3b66;border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:700}
+.store-badge span{display:block;font-size:10px;color:#888;margin-top:2px;font-family:monospace}
 .code-block{background:#0a0a1a;border-radius:8px;padding:1rem;margin:12px 0;font-family:monospace;font-size:12px;color:#66bb6a;border:1px solid #1a3a1a}
 .copy-btn{display:block;width:100%;padding:16px;background:#4fc3f7;color:#000;border:none;border-radius:8px;font-size:18px;font-weight:800;cursor:pointer;margin-top:12px}
 .copy-btn:active{background:#0288d1}
 .warn{background:#1a1a00;border:1px solid #f59e0b;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#f59e0b;line-height:1.6}
 .success{background:#001a00;border:1px solid #66bb6a;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#66bb6a;line-height:1.6}
-.url{background:#0d3b66;border-radius:6px;padding:6px 12px;font-family:monospace;color:#4fc3f7;font-size:14px;display:inline-block;margin:4px 0}
 #copyMsg{display:none;margin-top:8px;color:#66bb6a;font-weight:700;text-align:center;font-size:16px}
-.badge{display:inline-block;background:#4fc3f7;color:#000;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-left:8px}
 </style>
 </head>
 <body>
 
-<h1>🔍 Повний парсинг бази товарів Novus</h1>
-<div class="sub">~20 000 товарів · EAN + SKU + назва + одиниця · CSV файл</div>
+<h1>🔍 Повний парсинг бази товарів</h1>
+<div class="sub">Novus + Metro + Ашан · ~80 000 товарів · без дублікатів · CSV файл</div>
 
 <div class="step">
   <div class="step-title"><span class="step-num">1</span> Відкрий сайт Novus</div>
   <div class="step-body">
     Відкрий в браузері (Chrome або Firefox на <b>комп'ютері</b>):<br><br>
-    <span class="url">novus.zakaz.ua</span><br><br>
+    <b>novus.zakaz.ua</b><br><br>
     Дочекайся повного завантаження сторінки.
+    <div class="stores">
+      <div class="store-badge">🛒 Novus<span>48201070</span></div>
+      <div class="store-badge">🏪 Metro<span>48215611</span></div>
+      <div class="store-badge">🏬 Ашан<span>48246401</span></div>
+    </div>
+    Скрипт автоматично обходить всі три мережі.
   </div>
 </div>
 
@@ -48,113 +55,120 @@ h1{color:#4fc3f7;font-size:22px;margin-bottom:0.5rem;text-align:center}
 </div>
 
 <div class="step">
-  <div class="step-title"><span class="step-num">3</span> Скопіюй скрипт <span class="badge">ПОВНИЙ ДАМП</span></div>
+  <div class="step-title"><span class="step-num">3</span> Скопіюй та запусти скрипт</div>
   <div class="step-body">
     Натисни кнопку — скрипт скопіюється автоматично:
     <button class="copy-btn" onclick="copyScript()">📋 Копіювати скрипт</button>
-    <div id="copyMsg">✅ Скопійовано! Тепер вставте в консоль і натисніть Enter</div>
+    <div id="copyMsg">✅ Скопійовано! Вставте в консоль (Ctrl+V) і натисніть Enter</div>
+    <div class="warn">
+      ⚠️ Не закривай браузер поки не з'явиться ГОТОВО<br>
+      ⏱ Орієнтовний час: 60-90 хвилин (3 мережі, ~80 000 товарів)<br>
+      🔄 Якщо щось пішло не так — запусти ще раз, дублікати не додадуться
+    </div>
   </div>
 </div>
 
 <div class="step">
-  <div class="step-title"><span class="step-num">4</span> Встав і запусти</div>
+  <div class="step-title"><span class="step-num">4</span> Прогрес у консолі</div>
   <div class="step-body">
-    Клікни в поле консолі і натисни <b>Ctrl+V</b> (вставити).<br><br>
-    Потім натисни <b>Enter</b>.<br><br>
-    У консолі побачиш прогрес:
-    <div class="code-block">Завантажую категорії...
-Знайдено категорій: 87
-[1/87] Молочні продукти: 450 товарів → всього 450
-[2/87] Хліб та випічка: 312 товарів → всього 712
-[3/87] М'ясо та птиця: 398 товарів → всього 1050
+    <div class="code-block">=== NOVUS (48201070) ===
+Категорій: 87
+[1/87] Молочні продукти: 450 → всього 450
+[2/87] Хліб та випічка: 312 → всього 712
 ...
-ГОТОВО! Завантажено 20080 унікальних товарів</div>
+=== METRO (48215611) ===
+Категорій: 65
+[1/65] Каталог Вигідних пропозицій: 414 → всього 20100
+...
+=== АШАН (48246401) ===
+...
+ГОТОВО! Збережено 78543 унікальних товарів</div>
   </div>
 </div>
 
 <div class="step">
   <div class="step-title"><span class="step-num">5</span> Отримай CSV файл</div>
   <div class="step-body">
-    Файл <b>zakaz_novus_ДАТА.csv</b> автоматично завантажиться в папку <b>Downloads</b>.
+    Файл <b>zakaz_full_ДАТА.csv</b> автоматично завантажиться в папку <b>Downloads</b>.
     <div class="success">
       ✅ Формат файлу (роздільник ;):<br>
       ean ; sku ; title ; unit<br>
       "4820016254879";"416563";"Молоко Наше Barista 950г";"pcs"<br>
       "";"789012";"Сир твердий ваговий";"kg"
     </div>
-    <div class="warn">
-      ⚠️ Не закривай браузер і не перезавантажуй сторінку поки не з'явиться ГОТОВО<br>
-      ⏱ Орієнтовний час: 25-40 хвилин (20 000 товарів)<br>
-      🔄 Якщо щось пішло не так — просто запусти скрипт ще раз
-    </div>
   </div>
 </div>
 
 <script>
 const SCRIPT = `(async function(){
-  const STORE = '48201070';
+  const STORES = [
+    {id:'48201070', name:'NOVUS'},
+    {id:'48215611', name:'METRO'},
+    {id:'48246401', name:'АШАН'}
+  ];
   let products = {}, total = 0;
 
   async function get(url){
-    const r = await fetch(url, {headers:{'Accept':'application/json'}});
+    const r = await fetch(url,{headers:{'Accept':'application/json'}});
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
   }
+  function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
-  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-  // Отримуємо всі категорії
-  console.log('Завантажую категорії...');
-  const cats = await get('https://stores-api.zakaz.ua/stores/'+STORE+'/categories/');
-  
-  // Збираємо всі категорії включно з дочірніми
-  const allCats = [];
   function flatCats(list){
-    for(const c of list){
-      if(c.count > 0) allCats.push({id: c.id, title: c.title, count: c.count});
-      if(c.children && c.children.length) flatCats(c.children);
-    }
-  }
-  flatCats(Array.isArray(cats) ? cats : (cats.results || []));
-  
-  console.log('Знайдено категорій: ' + allCats.length);
-
-  // Парсимо кожну категорію
-  for(let i = 0; i < allCats.length; i++){
-    const cat = allCats[i];
-    const pages = Math.min(Math.ceil(cat.count / 50), 20);
-    let catNew = 0;
-
-    try {
-      for(let p = 1; p <= pages; p++){
-        const url = 'https://stores-api.zakaz.ua/stores/'+STORE+'/products/?category='+cat.id+'&per_page=50&page='+p;
-        const d = await get(url);
-        for(const item of (d.results||[])){
-          const key = item.ean || item.sku;
-          if(key && !products[key]){
-            products[key] = [item.ean||'', item.sku||'', item.title||'', item.unit||'pcs'];
-            total++; catNew++;
-          }
-        }
-        if(p < pages) await sleep(250);
+    const all=[];
+    function walk(arr){
+      for(const c of arr){
+        if(c.count>0) all.push({id:c.id,title:c.title,count:c.count});
+        if(c.children&&c.children.length) walk(c.children);
       }
-      console.log('['+( i+1)+'/'+allCats.length+'] '+cat.title+': '+cat.count+' товарів → всього '+total);
-    } catch(e) {
-      console.log('['+(i+1)+'/'+allCats.length+'] '+cat.title+': помилка — '+e.message);
     }
-    await sleep(350);
+    walk(Array.isArray(list)?list:(list.results||[]));
+    return all;
   }
 
-  // Зберігаємо CSV
-  const rows = [['ean','sku','title','unit']];
+  for(const store of STORES){
+    console.log('\\n=== '+store.name+' ('+store.id+') ===');
+    try{
+      const cats = await get('https://stores-api.zakaz.ua/stores/'+store.id+'/categories/');
+      const allCats = flatCats(cats);
+      console.log('Категорій: '+allCats.length);
+
+      for(let i=0;i<allCats.length;i++){
+        const cat=allCats[i];
+        const pages=Math.min(Math.ceil(cat.count/50),20);
+        try{
+          for(let p=1;p<=pages;p++){
+            const d=await get('https://stores-api.zakaz.ua/stores/'+store.id+'/products/?category='+cat.id+'&per_page=50&page='+p);
+            for(const item of(d.results||[])){
+              const key=item.ean||item.sku;
+              if(key&&!products[key]){
+                products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];
+                total++;
+              }
+            }
+            if(p<pages) await sleep(250);
+          }
+          console.log('['+(i+1)+'/'+allCats.length+'] '+cat.title+': '+cat.count+' → всього '+total);
+        }catch(e){
+          console.log('['+(i+1)+'/'+allCats.length+'] '+cat.title+': помилка');
+        }
+        await sleep(300);
+      }
+    }catch(e){
+      console.log(store.name+': помилка завантаження категорій — '+e.message);
+    }
+  }
+
+  const rows=[['ean','sku','title','unit']];
   for(const v of Object.values(products)) rows.push(v);
-  const csv = '\\uFEFF' + rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\\n');
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'zakaz_novus_'+new Date().toISOString().slice(0,10)+'.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  console.log('ГОТОВО! Завантажено '+total+' унікальних товарів');
+  const csv='\\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='zakaz_full_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  console.log('\\nГОТОВО! Збережено '+total+' унікальних товарів');
 })();`;
 
 function copyScript(){
@@ -163,8 +177,7 @@ function copyScript(){
   }).catch(()=>{
     const ta=document.createElement('textarea');
     ta.value=SCRIPT;
-    document.body.appendChild(ta);
-    ta.select();
+    document.body.appendChild(ta);ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
     document.getElementById('copyMsg').style.display='block';
