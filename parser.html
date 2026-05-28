@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zakaz Parser</title>
+<style>
+body{font-family:Arial,sans-serif;background:#1a1a2e;color:#e0e0e0;padding:1rem}
+h2{color:#4fc3f7;margin-bottom:1rem}
+.card{background:#16213e;border-radius:10px;padding:1rem;margin-bottom:1rem}
+.btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:8px;display:block}
+.btn-start{background:#4fc3f7;color:#000}
+.btn-stop{background:#ef5350;color:#fff}
+.btn-csv{background:#66bb6a;color:#000}
+.btn:disabled{opacity:0.4}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.stat-item{background:#0d3b66;border-radius:8px;padding:10px;text-align:center}
+.stat-val{font-size:22px;font-weight:800;color:#4fc3f7;font-family:monospace}
+.stat-label{font-size:11px;color:#888;margin-top:2px}
+.progress-bar{background:#0d3b66;border-radius:20px;height:20px;overflow:hidden;margin:10px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,#4fc3f7,#66bb6a);transition:width 0.3s;border-radius:20px}
+.log{background:#0a0a1a;border-radius:8px;padding:10px;height:180px;overflow-y:auto;font-size:12px;font-family:monospace}
+.ok{color:#66bb6a}.err{color:#ef5350}.info{color:#4fc3f7}
+select{width:100%;background:#0d3b66;border:1px solid #4fc3f7;border-radius:8px;padding:10px;color:#fff;font-size:14px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<h2>Zakaz.ua Parser</h2>
+<div class="card">
+  <select id="storeId">
+    <option value="48201070">Novus</option>
+    <option value="48215611">Сільпо</option>
+    <option value="48202050">Фора</option>
+    <option value="48202040">АТБ</option>
+  </select>
+  <button class="btn btn-start" id="btnStart" onclick="startParsing()">Почати парсинг</button>
+  <button class="btn btn-stop" id="btnStop" onclick="stopParsing()" disabled>Зупинити</button>
+  <button class="btn btn-csv" id="btnCsv" onclick="downloadCSV()" disabled>Завантажити CSV</button>
+</div>
+<div class="card">
+  <div class="stat">
+    <div class="stat-item"><div class="stat-val" id="sTotal">0</div><div class="stat-label">Товарів</div></div>
+    <div class="stat-item"><div class="stat-val" id="sEan">0</div><div class="stat-label">З EAN</div></div>
+    <div class="stat-item"><div class="stat-val" id="sWords">0</div><div class="stat-label">Слів</div></div>
+    <div class="stat-item"><div class="stat-val" id="sReq">0</div><div class="stat-label">Запитів</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="pFill" style="width:0%"></div></div>
+  <div id="curWord" style="font-size:12px;color:#888;text-align:center;margin-bottom:8px"></div>
+  <div class="log" id="log"></div>
+</div>
+<script>
+const WORDS=["молоко","хліб","масло","вершкове","сир","кефір","йогурт","сметана","вершки","яйця","ряжанка","морозиво","вода","сік","пиво","вино","горілка","коньяк","шампанське","квас","лимонад","чай","кава","цукор","сіль","борошно","рис","гречка","макарони","ковбаса","сосиски","шинка","бекон","курятина","свинина","яловичина","риба","оселедець","тунець","олія","майонез","кетчуп","соус","оцет","гірчиця","спеції","огірки","помідори","капуста","морква","цибуля","часник","картопля","буряк","банани","яблука","апельсини","лимони","виноград","полуниця","чіпси","печиво","цукерки","шоколад","вафлі","торт","мед","джем","горіхи","мюслі","пластівці","дитяче","памперси","шампунь","мило","зубна","порошок","засіб","туалетний","папір","губки","корм","вітаміни","крем","дезодорант","батарейки","консерви","горошок","кукурудза","квасоля","пюре","бульйон","суп","енергетик","протеїн","органічні","безглютенові","заморожені","пельмені","вареники","котлети","ікра","креветки","морепродукти","рибні","салат","броколі","перець","баклажан","кабачок","гарбуз","насіння","льон","кунжут","халва","козинаки","мармелад","жувальні","льодяники","сухофрукти","родзинки","арахіс","кешью","мигдаль","фісташки","чорний хліб","батон","круасан","бублик","лаваш","піта","ком","рулет","кекс","маффін","тістечко","макарун","зефір","пастила","ірис","карамель","льодяники","драже","желе","пудинг","сирок","творог","твердий сир","плавлений","моцарела","рікота","камамбер","брі","гауда","едам","пармезан","фета","адигейський","вівсянка","манна","кукурудзяна","перлова","ячна","пшоно","лобода","амарант","кіноа","спаржа","артишок","фенхель","пастернак","топінамбур","батат","кольрабі","редиска","редька","ріпа","дайкон","пекінська","айсберг","руккола","шпинат","кріп","петрушка","кінза","базилік","розмарин","тим'ян","орегано","куркума","паприка","коріандр","кардамон","кориця","гвоздика","мускат","ваніль","лавровий","аніс"];
+let running=false,products={},wi=0,reqs=0;
+function addLog(msg,type){const el=document.getElementById('log');const d=document.createElement('div');d.className=type;d.textContent=new Date().toLocaleTimeString('uk')+' '+msg;el.appendChild(d);el.scrollTop=el.scrollHeight;}
+function updateStats(){const v=Object.values(products);document.getElementById('sTotal').textContent=v.length;document.getElementById('sEan').textContent=v.filter(p=>p[0]).length;document.getElementById('sWords').textContent=wi;document.getElementById('sReq').textContent=reqs;}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+async function fetchPage(store,q,page){const url=`https://stores-api.zakaz.ua/stores/${store}/products/search/?q=${encodeURIComponent(q)}&page=${page}&per_page=50`;const r=await fetch(url,{headers:{'Accept':'application/json','Accept-Language':'uk-UA'}});if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function processWord(store,word){try{const d=await fetchPage(store,word,1);reqs++;const count=d.count||0;const pages=Math.min(Math.ceil(count/50),8);let added=0;for(const item of(d.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;}}for(let p=2;p<=pages&&running;p++){await sleep(350);const d2=await fetchPage(store,word,p);reqs++;for(const item of(d2.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;}}}addLog(`"${word}": ${count} всього, +${added} нових`,'ok');}catch(e){addLog(`"${word}": ${e.message}`,'err');}}
+async function startParsing(){const store=document.getElementById('storeId').value;running=true;wi=0;document.getElementById('btnStart').disabled=true;document.getElementById('btnStop').disabled=false;document.getElementById('btnCsv').disabled=true;addLog('Старт! Слів: '+WORDS.length,'info');for(let i=0;i<WORDS.length&&running;i++){wi=i+1;document.getElementById('curWord').textContent=`"${WORDS[i]}" (${wi}/${WORDS.length})`;document.getElementById('pFill').style.width=((wi)/WORDS.length*100)+'%';await processWord(store,WORDS[i]);updateStats();await sleep(400);}running=false;document.getElementById('btnStart').disabled=false;document.getElementById('btnStop').disabled=true;document.getElementById('btnCsv').disabled=false;document.getElementById('curWord').textContent='Готово!';addLog('Завершено! Товарів: '+Object.keys(products).length,'info');}
+function stopParsing(){running=false;document.getElementById('btnStop').disabled=true;document.getElementById('btnStart').disabled=false;document.getElementById('btnCsv').disabled=false;addLog('Зупинено','err');}
+function downloadCSV(){const rows=[['ean','sku','title','unit']];for(const v of Object.values(products))rows.push(v);const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='zakaz_'+new Date().toISOString().slice(0,10)+'.csv';a.click();addLog('CSV завантажено: '+Object.keys(products).length+' товарів','ok');}
+</script>
+</body>
+</html>
