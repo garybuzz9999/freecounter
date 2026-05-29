@@ -53,7 +53,11 @@ h1{color:#4fc3f7;font-size:22px;margin-bottom:0.5rem;text-align:center}
 
 <script>
 const SCRIPT = `(async function(){
-  const STORE = '48201070';
+  const STORES = [
+    {id:'48201070', name:'NOVUS'},
+    {id:'48215611', name:'METRO'},
+    {id:'48246401', name:'АШАН'}
+  ];
   const WORDS = [
     'молоко','хліб','масло','сир','кефір','йогурт','сметана','вершки','яйця','ряжанка','морозиво','сирок','творог','моцарела','бринза','пармезан','рикота','фета',
     'вода','сік','пиво','вино','горілка','коньяк','шампанське','квас','лімонад','чай','кава','какао','компот','морс','нектар','енергетик','ром','джин','текіла','віскі','лікер','настоянка','бурбон','вермут','сидр','медовуха',
@@ -84,25 +88,27 @@ const SCRIPT = `(async function(){
     'сухофрукти','родзинки','курага','чорнослив','фініки','інжир сушений','журавлина'
   ];
   let products={},total=0;
-  console.log('СТАРТ v3! Слів: '+WORDS.length);
-  for(let i=0;i<WORDS.length;i++){
-    const w=WORDS[i];
-    try{
-      const r=await fetch('https://stores-api.zakaz.ua/stores/'+STORE+'/products/search/?q='+encodeURIComponent(w)+'&per_page=50&page=1',{headers:{'Accept':'application/json','Accept-Language':'uk-UA,uk;q=0.9'}});
-      const d=await r.json();
-      const count=d.count||0;
-      const pages=Math.min(Math.ceil(count/50),10);
-      let added=0;
-      for(const item of(d.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;total++;}}
-      for(let p=2;p<=pages;p++){
-        await new Promise(r=>setTimeout(r,300));
-        const r2=await fetch('https://stores-api.zakaz.ua/stores/'+STORE+'/products/search/?q='+encodeURIComponent(w)+'&per_page=50&page='+p,{headers:{'Accept':'application/json','Accept-Language':'uk-UA,uk;q=0.9'}});
-        const d2=await r2.json();
-        for(const item of(d2.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;total++;}}
-      }
-      console.log('['+(i+1)+'/'+WORDS.length+'] "'+w+'": '+count+' → +'+added+', всього '+total);
-    }catch(e){console.log('['+(i+1)+'/'+WORDS.length+'] "'+w+'": помилка');}
-    await new Promise(r=>setTimeout(r,350));
+  for(const STORE of STORES){
+    console.log('\n=== '+STORE.name+' ('+STORE.id+') ===');
+    for(let i=0;i<WORDS.length;i++){
+      const w=WORDS[i];
+      try{
+        const r=await fetch('https://stores-api.zakaz.ua/stores/'+STORE.id+'/products/search/?q='+encodeURIComponent(w)+'&per_page=50&page=1',{headers:{'Accept':'application/json','Accept-Language':'uk-UA,uk;q=0.9'}});
+        const d=await r.json();
+        const count=d.count||0;
+        const pages=Math.min(Math.ceil(count/50),10);
+        let added=0;
+        for(const item of(d.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;total++;}}
+        for(let p=2;p<=pages;p++){
+          await new Promise(r=>setTimeout(r,300));
+          const r2=await fetch('https://stores-api.zakaz.ua/stores/'+STORE.id+'/products/search/?q='+encodeURIComponent(w)+'&per_page=50&page='+p,{headers:{'Accept':'application/json','Accept-Language':'uk-UA,uk;q=0.9'}});
+          const d2=await r2.json();
+          for(const item of(d2.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;total++;}}
+        }
+        console.log('['+STORE.name+' '+(i+1)+'/'+WORDS.length+'] "'+w+'": +'+added+', всього '+total);
+      }catch(e){console.log('['+STORE.name+' '+(i+1)+'/'+WORDS.length+'] "'+w+'": помилка');}
+      await new Promise(r=>setTimeout(r,350));
+    }
   }
   const rows=[['ean','sku','title','unit']];
   for(const v of Object.values(products))rows.push(v);
@@ -110,7 +116,7 @@ const SCRIPT = `(async function(){
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='zakaz_novus_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download='zakaz_all_'+new Date().toISOString().slice(0,10)+'.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   console.log('\\nГОТОВО! Збережено '+total+' унікальних товарів');
 })();`;
