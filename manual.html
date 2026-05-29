@@ -14,10 +14,6 @@ h1{color:#4fc3f7;font-size:22px;margin-bottom:0.5rem;text-align:center}
 .step-title{font-size:16px;font-weight:700;color:#4fc3f7;display:flex;align-items:center;margin-bottom:10px}
 .step-body{font-size:14px;color:#ccc;line-height:1.7}
 .step-body b{color:#fff}
-.stores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
-.store-badge{background:#0d3b66;border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:700}
-.store-badge span{display:block;font-size:10px;color:#888;margin-top:2px;font-family:monospace}
-.code-block{background:#0a0a1a;border-radius:8px;padding:1rem;margin:12px 0;font-family:monospace;font-size:12px;color:#66bb6a;border:1px solid #1a3a1a}
 .copy-btn{display:block;width:100%;padding:16px;background:#4fc3f7;color:#000;border:none;border-radius:8px;font-size:18px;font-weight:800;cursor:pointer;margin-top:12px}
 .copy-btn:active{background:#0288d1}
 .warn{background:#1a1a00;border:1px solid #f59e0b;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#f59e0b;line-height:1.6}
@@ -27,141 +23,67 @@ h1{color:#4fc3f7;font-size:22px;margin-bottom:0.5rem;text-align:center}
 </head>
 <body>
 
-<h1>🔍 Повний парсинг бази товарів</h1>
-<div class="sub">Novus + Metro + Ашан · ~80 000 товарів · без дублікатів · CSV файл</div>
+<h1>🔍 Парсинг бази товарів Novus+Metro+Ашан</h1>
+<div class="sub">~30 000 товарів · EAN + SKU + назва + одиниця · CSV файл</div>
 
 <div class="step">
   <div class="step-title"><span class="step-num">1</span> Відкрий сайт Novus</div>
   <div class="step-body">
-    Відкрий в браузері (Chrome або Firefox на <b>комп'ютері</b>):<br><br>
+    Відкрий в Firefox на <b>комп'ютері</b>:<br><br>
     <b>novus.zakaz.ua</b><br><br>
-    Дочекайся повного завантаження сторінки.
-    <div class="stores">
-      <div class="store-badge">🛒 Novus<span>48201070</span></div>
-      <div class="store-badge">🏪 Metro<span>48215611</span></div>
-      <div class="store-badge">🏬 Ашан<span>48246401</span></div>
-    </div>
-    Скрипт автоматично обходить всі три мережі.
+    Дочекайся повного завантаження.
   </div>
 </div>
 
 <div class="step">
-  <div class="step-title"><span class="step-num">2</span> Відкрий консоль розробника</div>
+  <div class="step-title"><span class="step-num">2</span> Відкрий консоль</div>
   <div class="step-body">
-    Натисни клавішу <b>F12</b> на клавіатурі.<br><br>
-    У вікні що відкрилось — натисни вкладку <b>Console</b><br><br>
-    Побачиш поле з курсором і знаком <b>&gt;</b> внизу.
+    Натисни <b>F12</b> → вкладка <b>Консоль</b><br><br>
+    Надрукуй: <b>разрешить вставку</b> (без Enter!)<br><br>
+    Потім натисни кнопку нижче і <b>Ctrl+V</b> → <b>Enter</b>
   </div>
 </div>
 
 <div class="step">
-  <div class="step-title"><span class="step-num">3</span> Скопіюй та запусти скрипт</div>
+  <div class="step-title"><span class="step-num">3</span> Скопіюй скрипт</div>
   <div class="step-body">
-    Натисни кнопку — скрипт скопіюється автоматично:
-    <button class="copy-btn" onclick="copyScript()">📋 Копіювати скрипт</button>
-    <div id="copyMsg">✅ Скопійовано! Вставте в консоль (Ctrl+V) і натисніть Enter</div>
+    <button class="copy-btn" onclick="copyScript()">📋 Копіювати скрипт v2</button>
+    <div id="copyMsg">✅ Скопійовано! Вставте в консоль і натисніть Enter</div>
     <div class="warn">
       ⚠️ Не закривай браузер поки не з'явиться ГОТОВО<br>
-      ⏱ Орієнтовний час: 60-90 хвилин (3 мережі, ~80 000 товарів)<br>
-      🔄 Якщо щось пішло не так — запусти ще раз, дублікати не додадуться
-    </div>
-  </div>
-</div>
-
-<div class="step">
-  <div class="step-title"><span class="step-num">4</span> Прогрес у консолі</div>
-  <div class="step-body">
-    <div class="code-block">=== NOVUS (48201070) ===
-Категорій: 87
-[1/87] Молочні продукти: 450 → всього 450
-[2/87] Хліб та випічка: 312 → всього 712
-...
-=== METRO (48215611) ===
-Категорій: 65
-[1/65] Каталог Вигідних пропозицій: 414 → всього 20100
-...
-=== АШАН (48246401) ===
-...
-ГОТОВО! Збережено 78543 унікальних товарів</div>
-  </div>
-</div>
-
-<div class="step">
-  <div class="step-title"><span class="step-num">5</span> Отримай CSV файл</div>
-  <div class="step-body">
-    Файл <b>zakaz_full_ДАТА.csv</b> автоматично завантажиться в папку <b>Downloads</b>.
-    <div class="success">
-      ✅ Формат файлу (роздільник ;):<br>
-      ean ; sku ; title ; unit<br>
-      "4820016254879";"416563";"Молоко Наше Barista 950г";"pcs"<br>
-      "";"789012";"Сир твердий ваговий";"kg"
+      ⏱ Час: ~30-40 хвилин<br>
+      📁 Файл zakaz_full_ДАТА.csv скачається автоматично
     </div>
   </div>
 </div>
 
 <script>
 const SCRIPT = `(async function(){
-  const STORES = [
-    {id:'48201070', name:'NOVUS'},
-    {id:'48215611', name:'METRO'},
-    {id:'48246401', name:'АШАН'}
-  ];
-  let products = {}, total = 0;
-
-  async function get(url){
-    const r = await fetch(url,{headers:{'Accept':'application/json'}});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.json();
-  }
-  function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-
-  function flatCats(list){
-    const all=[];
-    function walk(arr){
-      for(const c of arr){
-        if(c.count>0) all.push({id:c.id,title:c.title,count:c.count});
-        if(c.children&&c.children.length) walk(c.children);
-      }
-    }
-    walk(Array.isArray(list)?list:(list.results||[]));
-    return all;
-  }
-
-  for(const store of STORES){
-    console.log('\\n=== '+store.name+' ('+store.id+') ===');
+  const STORE = '48201070';
+  const WORDS = ['молоко','хліб','масло','сир','кефір','йогурт','сметана','вершки','яйця','морозиво','вода','сік','пиво','вино','горілка','коньяк','шампанське','квас','лимонад','чай','кава','цукор','сіль','борошно','рис','гречка','макарони','ковбаса','сосиски','шинка','бекон','курятина','свинина','яловичина','риба','оселедець','тунець','олія','майонез','кетчуп','соус','огірки','помідори','капуста','морква','цибуля','часник','картопля','буряк','банани','яблука','апельсини','лимони','виноград','полуниця','чіпси','печиво','цукерки','шоколад','вафлі','торт','мед','джем','горіхи','мюслі','пластівці','памперси','шампунь','мило','зубна паста','порошок','засіб','туалетний папір','губки','корм','вітаміни','крем','дезодорант','батарейки','консерви','горошок','кукурудза','квасоля','пюре','бульйон','суп','енергетик','заморожені','пельмені','вареники','котлети','ікра','креветки','салат','броколі','перець','баклажан','кабачок','гарбуз','насіння','халва','мармелад','сухофрукти','горіхи','батон','кекс','тістечко','зефір','желе','сирок','творог','моцарела','вівсянка','спаржа','шпинат','базилік','куркума','паприка','кориця','ваніль','соняшникова','кокосова','оливкова','бальзам','гель для душу','піна','лак','фарба','памперс','прокладки','тампони','бритва','зубна щітка','ополіскувач','відбілювач','чистячий','миючий','пральний','рукавички','серветки','фольга','пакети'];
+  let products={},total=0;
+  console.log('СТАРТ! Слів: '+WORDS.length+' · Магазин: Novus');
+  for(let i=0;i<WORDS.length;i++){
+    const w=WORDS[i];
     try{
-      const cats = await get('https://stores-api.zakaz.ua/stores/'+store.id+'/categories/');
-      const allCats = flatCats(cats);
-      console.log('Категорій: '+allCats.length);
-
-      for(let i=0;i<allCats.length;i++){
-        const cat=allCats[i];
-        const pages=Math.min(Math.ceil(cat.count/50),20);
-        try{
-          for(let p=1;p<=pages;p++){
-            const d=await get('https://stores-api.zakaz.ua/stores/'+store.id+'/products/?category='+cat.id+'&per_page=50&page='+p);
-            for(const item of(d.results||[])){
-              const key=item.ean||item.sku;
-              if(key&&!products[key]){
-                products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];
-                total++;
-              }
-            }
-            if(p<pages) await sleep(250);
-          }
-          console.log('['+(i+1)+'/'+allCats.length+'] '+cat.title+': '+cat.count+' → всього '+total);
-        }catch(e){
-          console.log('['+(i+1)+'/'+allCats.length+'] '+cat.title+': помилка');
-        }
-        await sleep(300);
+      const r=await fetch('https://stores-api.zakaz.ua/stores/'+STORE+'/products/search/?q='+encodeURIComponent(w)+'&per_page=50&page=1',{headers:{'Accept':'application/json'}});
+      const d=await r.json();
+      const count=d.count||0;
+      const pages=Math.min(Math.ceil(count/50),10);
+      let added=0;
+      for(const item of(d.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;total++;}}
+      for(let p=2;p<=pages;p++){
+        await new Promise(r=>setTimeout(r,300));
+        const r2=await fetch('https://stores-api.zakaz.ua/stores/'+STORE+'/products/search/?q='+encodeURIComponent(w)+'&per_page=50&page='+p,{headers:{'Accept':'application/json'}});
+        const d2=await r2.json();
+        for(const item of(d2.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;total++;}}
       }
-    }catch(e){
-      console.log(store.name+': помилка завантаження категорій — '+e.message);
-    }
+      console.log('['+(i+1)+'/'+WORDS.length+'] "'+w+'": '+count+' → +'+added+' нових, всього '+total);
+    }catch(e){console.log('['+(i+1)+'/'+WORDS.length+'] "'+w+'": помилка');}
+    await new Promise(r=>setTimeout(r,400));
   }
-
   const rows=[['ean','sku','title','unit']];
-  for(const v of Object.values(products)) rows.push(v);
+  for(const v of Object.values(products))rows.push(v);
   const csv='\\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
