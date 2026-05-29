@@ -3,121 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Парсинг бази товарів</title>
+<title>Парсинг Ашан</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#0f1117;color:#e0e0e0;padding:1.5rem;max-width:800px;margin:0 auto}
 h1{color:#4fc3f7;font-size:22px;margin-bottom:0.5rem;text-align:center}
 .sub{text-align:center;color:#888;font-size:13px;margin-bottom:1.5rem}
 .step{background:#16213e;border-radius:12px;padding:1.25rem;margin-bottom:1rem;border-left:4px solid #4fc3f7}
-.step-num{background:#4fc3f7;color:#000;width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;margin-right:10px;flex-shrink:0}
-.step-title{font-size:16px;font-weight:700;color:#4fc3f7;display:flex;align-items:center;margin-bottom:10px}
+.step-title{font-size:16px;font-weight:700;color:#4fc3f7;margin-bottom:10px}
 .step-body{font-size:14px;color:#ccc;line-height:1.7}
 .step-body b{color:#fff}
 .copy-btn{display:block;width:100%;padding:16px;background:#4fc3f7;color:#000;border:none;border-radius:8px;font-size:18px;font-weight:800;cursor:pointer;margin-top:12px}
-.copy-btn:active{background:#0288d1}
 .warn{background:#1a1a00;border:1px solid #f59e0b;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#f59e0b;line-height:1.6}
 #copyMsg{display:none;margin-top:8px;color:#66bb6a;font-weight:700;text-align:center;font-size:16px}
 </style>
 </head>
 <body>
-<h1>🔍 Парсинг бази товарів Novus</h1>
-<div class="sub">Українські запити · ~25 000 товарів · CSV файл</div>
+<h1>🏬 Парсинг АШАН</h1>
+<div class="sub">~15 000 товарів · EAN + SKU + назва + одиниця · CSV файл</div>
 
 <div class="step">
-  <div class="step-title"><span class="step-num">1</span> Відкрий сайт Novus</div>
-  <div class="step-body">Відкрий в Firefox: <b>novus.zakaz.ua</b></div>
+  <div class="step-title">1. Відкрий сайт Ашан</div>
+  <div class="step-body">Відкрий в Firefox: <b>auchan.zakaz.ua</b></div>
 </div>
 
 <div class="step">
-  <div class="step-title"><span class="step-num">2</span> Відкрий консоль</div>
+  <div class="step-title">2. Відкрий консоль</div>
   <div class="step-body">
     <b>F12</b> → вкладка <b>Консоль</b><br><br>
-    Надрукуй: <b>разрешить вставку</b> (без Enter)<br><br>
+    Надрукуй: <b>разрешить вставку</b> (без Enter!)<br><br>
     Потім натисни кнопку нижче → <b>Ctrl+V</b> → <b>Enter</b>
   </div>
 </div>
 
 <div class="step">
-  <div class="step-title"><span class="step-num">3</span> Скопіюй скрипт</div>
+  <div class="step-title">3. Скопіюй скрипт</div>
   <div class="step-body">
     <button class="copy-btn" onclick="copyScript()">📋 Копіювати скрипт — АШАН</button>
     <div id="copyMsg">✅ Скопійовано! Вставте Ctrl+V → Enter</div>
     <div class="warn">
       ⚠️ Не закривай браузер поки не з'явиться ГОТОВО<br>
-      ⏱ Час: ~40-50 хвилин<br>
-      📁 Файл zakaz_novus_ДАТА.csv скачається автоматично
+      ⏱ Час: ~30-40 хвилин<br>
+      📁 Файл zakaz_auchan_ДАТА.csv скачається автоматично
     </div>
   </div>
 </div>
 
 <script>
-const SCRIPT = `(async function(){
-  const STORES = [
-    {id:'48246401', name:'АШАН'}
-  ];
-  const WORDS = [
-    'молоко','хліб','масло','сир','кефір','йогурт','сметана','вершки','яйця','ряжанка','морозиво','сирок','творог','моцарела','бринза','пармезан','рикота','фета',
-    'вода','сік','пиво','вино','горілка','коньяк','шампанське','квас','лімонад','чай','кава','какао','компот','морс','нектар','енергетик','ром','джин','текіла','віскі','лікер','настоянка','бурбон','вермут','сидр','медовуха',
-    'цигарки','сигарети','тютюн','сигари','електронні сигарети','запальничка','попільничка',
-    'цукор','сіль','борошно','рис','гречка','макарони','вермішель','спагеті','пшоно','манка','вівсянка','перловка','ячка','кускус','булгур','кіноа',
-    'ковбаса','сосиски','шинка','бекон','курятина','свинина','яловичина','баранина','кролятина','індичка','качка','гусятина','фарш','стейк','відбивна','котлета',
-    'риба','оселедець','тунець','лосось','форель','скумбрія','тріска','мінтай','карась','щука','короп','краби','креветки','кальмари','мідії','ікра','морепродукти',
-    'олія','майонез','кетчуп','соус','оцет','гірчиця','хрін','аджика','соєвий соус','табаско','песто','тхіна',
-    'огірки','помідори','капуста','морква','цибуля','часник','картопля','буряк','перець','баклажан','кабачок','гарбуз','броколі','цвітна капуста','спаржа','салат','шпинат','руккола','редиска','ріпа','пастернак','селера','лук-порей','кукурудза','горошок','квасоля','сочевиця','нут','боби',
-    'банани','яблука','апельсини','лимони','виноград','полуниця','черешня','вишня','абрикос','персик','слива','груша','ківі','манго','ананас','гранат','хурма','інжир','авокадо','кокос','папайя','маракуя','диня','кавун',
-    'чіпси','сухарики','попкорн','горішки','арахіс','кешью','мигдаль','фісташки','фундук','насіння','гарбузове насіння','соняшникове насіння',
-    'печиво','цукерки','шоколад','вафлі','торт','тістечко','кекс','мармелад','зефір','халва','козинаки','карамель','льодяники','жуйка','драже','пастила','нуга','марципан','рахат',
-    'мед','джем','варення','нутела','арахісова паста','кокосова олія','сироп',
-    'мюслі','пластівці','гранола','батончик','протеїн','спортивне харчування',
-    'хліб білий','хліб чорний','батон','багет','лаваш','піта','бублик','круасан','булочка',
-    'памперси','підгузники','серветки вологі','пудра дитяча','шампунь дитячий','крем дитячий',
-    'шампунь','гель для душу','мило','зубна паста','зубна щітка','ополіскувач','зубна нитка','дезодорант','антиперспірант','парфуми','туалетна вода','крем для обличчя','крем для тіла','лосьйон','тонік','маска','скраб','бальзам','кондиціонер для волосся',
-    'прокладки','тампони','менструальна чаша','бритва','пінка для гоління','лезо',
-    'порошок','гель для прання','ополіскувач для білизни','відбілювач','пральний засіб','засіб для посуду','засіб для підлоги','засіб для унітазу','чистячий засіб','освіжувач','гальмо',
-    'туалетний папір','рушники паперові','серветки','пакети для сміття','фольга','харчова плівка','пергамент','губки','рукавички','швабра','відро',
-    'корм для котів','корм для собак','наповнювач','ласощі для тварин','вітаміни для тварин',
-    'вітаміни','мінерали','омега','колаген','імуностимулятори','пробіотики',
-    'батарейки','свічки','ліхтарик','термос','судок','пляшка','контейнер',
-    'консерви','тушонка','паштет','горошок консервований','кукурудза консервована','томати консервовані','огірки мариновані','гриби мариновані',
-    'заморожені овочі','заморожені фрукти','заморожена риба','заморожене мясо','пельмені','вареники','млинці','піца заморожена','картопля фрі',
-    'бульйон','суп','локшина','вермішель швидкого приготування','пюре','каша',
-    'куркума','паприка','кориця','ваніль','лавровий лист','перець чорний','перець червоний','коріандр','кардамон','гвоздика','мускат','аніс','базилік','орегано','розмарин','чебрець','петрушка','кріп',
-    'сухофрукти','родзинки','курага','чорнослив','фініки','інжир сушений','журавлина'
-  ];
-  let products={},total=0;
-  for(const STORE of STORES){
-    console.log('\n=== '+STORE.name+' ('+STORE.id+') ===');
-    for(let i=0;i<WORDS.length;i++){
-      const w=WORDS[i];
-      try{
-        const r=await fetch('https://stores-api.zakaz.ua/stores/'+STORE.id+'/products/search/?q='+encodeURIComponent(w)+'&per_page=50&page=1',{headers:{'Accept':'application/json','Accept-Language':'uk-UA,uk;q=0.9'}});
-        const d=await r.json();
-        const count=d.count||0;
-        const pages=Math.min(Math.ceil(count/50),10);
-        let added=0;
-        for(const item of(d.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;total++;}}
-        for(let p=2;p<=pages;p++){
-          await new Promise(r=>setTimeout(r,300));
-          const r2=await fetch('https://stores-api.zakaz.ua/stores/'+STORE.id+'/products/search/?q='+encodeURIComponent(w)+'&per_page=50&page='+p,{headers:{'Accept':'application/json','Accept-Language':'uk-UA,uk;q=0.9'}});
-          const d2=await r2.json();
-          for(const item of(d2.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||'',item.sku||'',item.title||'',item.unit||'pcs'];added++;total++;}}
-        }
-        console.log('['+STORE.name+' '+(i+1)+'/'+WORDS.length+'] "'+w+'": +'+added+', всього '+total);
-      }catch(e){console.log('['+STORE.name+' '+(i+1)+'/'+WORDS.length+'] "'+w+'": помилка');}
-      await new Promise(r=>setTimeout(r,350));
-    }
-  }
-  const rows=[['ean','sku','title','unit']];
-  for(const v of Object.values(products))rows.push(v);
-  const csv='\\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='zakaz_auchan_'+new Date().toISOString().slice(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  console.log('\\nГОТОВО! Збережено '+total+' унікальних товарів');
-})();`;
+const SCRIPT = '(async function(){\n  const STORES=[{id:\'48246401\',name:\'АШАН\'}];\n  const WORDS=[\'молоко\',\'хліб\',\'масло\',\'сир\',\'кефір\',\'йогурт\',\'сметана\',\'вершки\',\'яйця\',\'ряжанка\',\'морозиво\',\'сирок\',\'творог\',\'моцарела\',\'бринза\',\'вода\',\'сік\',\'пиво\',\'вино\',\'горілка\',\'коньяк\',\'шампанське\',\'квас\',\'лімонад\',\'чай\',\'кава\',\'какао\',\'компот\',\'нектар\',\'енергетик\',\'ром\',\'джин\',\'текіла\',\'віскі\',\'лікер\',\'цигарки\',\'сигарети\',\'тютюн\',\'цукор\',\'сіль\',\'борошно\',\'рис\',\'гречка\',\'макарони\',\'вермішель\',\'пшоно\',\'манка\',\'вівсянка\',\'кускус\',\'ковбаса\',\'сосиски\',\'шинка\',\'бекон\',\'курятина\',\'свинина\',\'яловичина\',\'баранина\',\'індичка\',\'фарш\',\'риба\',\'оселедець\',\'тунець\',\'лосось\',\'форель\',\'скумбрія\',\'тріска\',\'краби\',\'креветки\',\'кальмари\',\'мідії\',\'ікра\',\'олія\',\'майонез\',\'кетчуп\',\'соус\',\'оцет\',\'гірчиця\',\'хрін\',\'огірки\',\'помідори\',\'капуста\',\'морква\',\'цибуля\',\'часник\',\'картопля\',\'буряк\',\'перець\',\'баклажан\',\'кабачок\',\'гарбуз\',\'броколі\',\'салат\',\'шпинат\',\'руккола\',\'редиска\',\'кукурудза\',\'горошок\',\'квасоля\',\'сочевиця\',\'нут\',\'банани\',\'яблука\',\'апельсини\',\'лимони\',\'виноград\',\'полуниця\',\'черешня\',\'абрикос\',\'персик\',\'слива\',\'груша\',\'ківі\',\'манго\',\'ананас\',\'гранат\',\'хурма\',\'авокадо\',\'чіпси\',\'сухарики\',\'попкорн\',\'арахіс\',\'кешью\',\'мигдаль\',\'фісташки\',\'фундук\',\'насіння\',\'печиво\',\'цукерки\',\'шоколад\',\'вафлі\',\'торт\',\'тістечко\',\'кекс\',\'мармелад\',\'зефір\',\'халва\',\'карамель\',\'льодяники\',\'мед\',\'джем\',\'варення\',\'мюслі\',\'пластівці\',\'гранола\',\'батон\',\'багет\',\'лаваш\',\'бублик\',\'круасан\',\'памперси\',\'серветки\',\'шампунь\',\'гель\',\'мило\',\'зубна\',\'дезодорант\',\'антиперспірант\',\'крем\',\'лосьйон\',\'маска\',\'бальзам\',\'кондиціонер\',\'прокладки\',\'тампони\',\'бритва\',\'порошок\',\'засіб\',\'туалетний папір\',\'губки\',\'рукавички\',\'корм\',\'вітаміни\',\'батарейки\',\'консерви\',\'тушонка\',\'паштет\',\'заморожені\',\'пельмені\',\'вареники\',\'котлети\',\'бульйон\',\'суп\',\'куркума\',\'паприка\',\'кориця\',\'ваніль\',\'базилік\',\'петрушка\',\'кріп\',\'сухофрукти\',\'родзинки\',\'курага\',\'чорнослив\',\'побутова хімія\',\'миючий\',\'чистячий\',\'відбілювач\',\'пральний\',\'освіжувач\',\'фольга\',\'пакети\'];\n  let products={},total=0;\n  for(const STORE of STORES){\n    console.log(\'=== \'+STORE.name+\' ===\');\n    for(let i=0;i<WORDS.length;i++){\n      const w=WORDS[i];\n      try{\n        const r=await fetch(\'https://stores-api.zakaz.ua/stores/\'+STORE.id+\'/products/search/?q=\'+encodeURIComponent(w)+\'&per_page=50&page=1\',{headers:{\'Accept\':\'application/json\',\'Accept-Language\':\'uk-UA,uk;q=0.9\'}});\n        const d=await r.json();\n        const count=d.count||0;\n        const pages=Math.min(Math.ceil(count/50),10);\n        let added=0;\n        for(const item of(d.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||\'\',item.sku||\'\',item.title||\'\',item.unit||\'pcs\'];added++;total++;}}\n        for(let p=2;p<=pages;p++){await new Promise(r=>setTimeout(r,300));const r2=await fetch(\'https://stores-api.zakaz.ua/stores/\'+STORE.id+\'/products/search/?q=\'+encodeURIComponent(w)+\'&per_page=50&page=\'+p,{headers:{\'Accept\':\'application/json\',\'Accept-Language\':\'uk-UA,uk;q=0.9\'}});const d2=await r2.json();for(const item of(d2.results||[])){const key=item.ean||item.sku;if(key&&!products[key]){products[key]=[item.ean||\'\',item.sku||\'\',item.title||\'\',item.unit||\'pcs\'];added++;total++;}}}\n        console.log(\'[\'+STORE.name+\' \'+(i+1)+\'/\'+WORDS.length+\'] \'+w+\': +\'+added+\' всього \'+total);\n      }catch(e){console.log(\'[\'+STORE.name+\' \'+(i+1)+\'/\'+WORDS.length+\'] \'+w+\': помилка\');}\n      await new Promise(r=>setTimeout(r,350));\n    }\n  }\n  const rows=[[\'ean\',\'sku\',\'title\',\'unit\']];\n  for(const v of Object.values(products))rows.push(v);\n  const csv=\'\\uFEFF\'+rows.map(r=>r.map(c=>\'"\'+String(c).replace(/"/g,\'""\')+\'"\').join(\';\')).join(\'\\n\');\n  const blob=new Blob([csv],{type:\'text/csv;charset=utf-8\'});\n  const a=document.createElement(\'a\');a.href=URL.createObjectURL(blob);\n  a.download=\'zakaz_auchan_\'+new Date().toISOString().slice(0,10)+\'.csv\';\n  document.body.appendChild(a);a.click();document.body.removeChild(a);\n  console.log(\'ГОТОВО! Збережено \'+total+\' унікальних товарів\');\n})();';
 
 function copyScript(){
   navigator.clipboard.writeText(SCRIPT).then(()=>{
