@@ -66,42 +66,50 @@
     console.log("✅ Firebase connected to scancount-b39ed");
   </script>
 
-  <!-- Listex lookup via CORS proxy -->
+  <!-- External barcode lookup: Open Food Facts + UPC Item DB -->
   <script>
+    function detectUnit(text) {
+      if(!text) return 'шт';
+      if(/кг|kg/i.test(text)) return 'кг';
+      if(/мл|ml/i.test(text)) return 'мл';
+      if(/[0-9]\s*л|[0-9]\s*l/i.test(text)) return 'л';
+      if(/[0-9]\s*г|[0-9]\s*g/i.test(text)) return 'г';
+      return 'шт';
+    }
+
     window.listexLookup = async function(ean) {
+      // 1. Open Food Facts
       try {
-        // Use allorigins proxy to bypass CORS
-        const url = 'https://listex.info/uk/product/' + ean;
-        const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-        const resp = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
-        const data = await resp.json();
-        const html = data.contents || '';
-
-        // Extract product title from <h1> or og:title
-        let title = '';
-        const ogMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i);
-        if(ogMatch) title = ogMatch[1].replace(' - Listex','').replace(' | Listex','').trim();
-
-        if(!title) {
-          const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-          if(h1Match) title = h1Match[1].trim();
+        const r = await fetch(
+          'https://world.openfoodfacts.org/api/v2/product/' + ean + '.json?fields=product_name_uk,product_name_ru,product_name,quantity',
+          { signal: AbortSignal.timeout(7000) }
+        );
+        const d = await r.json();
+        if(d.status === 1 && d.product) {
+          const p = d.product;
+          const name = p.product_name_uk || p.product_name_ru || p.product_name || '';
+          if(name && name.length > 2) {
+            const qty = p.quantity || '';
+            const title = name + (qty ? ' ' + qty : '');
+            return { title, unit: detectUnit(qty || name) };
+          }
         }
+      } catch(e) { console.log('OFF:', e.message); }
 
-        // Extract unit (шт/кг/л/г)
-        let unit = 'шт';
-        if(/(кг|kg)/i.test(title)) unit = 'кг';
-        else if(/(л|l)/i.test(title) && !/мл/i.test(title)) unit = 'л';
-        else if(/(мл|ml)/i.test(title)) unit = 'мл';
-        else if(/(г|g)/i.test(title) && !/кг/i.test(title)) unit = 'г';
-
-        if(title && title.length > 3 && !html.includes('404') && !html.includes('не знайдено')) {
-          return { title, unit };
+      // 2. UPC Item DB
+      try {
+        const r2 = await fetch(
+          'https://api.upcitemdb.com/prod/trial/lookup?upc=' + ean,
+          { signal: AbortSignal.timeout(7000) }
+        );
+        const d2 = await r2.json();
+        if(d2.code === 'OK' && d2.items && d2.items[0]) {
+          const title = d2.items[0].title || '';
+          if(title.length > 2) return { title, unit: detectUnit(title) };
         }
-        return null;
-      } catch(e) {
-        console.error("Listex lookup error:", e);
-        return null;
-      }
+      } catch(e) { console.log('UPC ItemDB:', e.message); }
+
+      return null;
     };
   </script>
   <style>
