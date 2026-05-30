@@ -85,6 +85,7 @@
           { signal: AbortSignal.timeout(7000) }
         );
         const d = await r.json();
+        console.log('OFF response status:', d.status, 'product:', d.product?.product_name);
         if(d.status === 1 && d.product) {
           const p = d.product;
           const name = p.product_name_uk || p.product_name_ru || p.product_name || '';
@@ -788,7 +789,7 @@
       <input class="scan-input" id="barcodeInput" type="text"
         placeholder="Відскануйте або введіть штрихкод..."
         autocomplete="off" inputmode="numeric">
-      <button onclick="processBarcode()" style="height:52px;padding:0 20px;font-size:16px;font-weight:700;background:#1a4a8a;color:#fff;border:none;border-radius:var(--radius);cursor:pointer;flex-shrink:0">OK</button>
+      <button id="okBtn" style="height:52px;padding:0 20px;font-size:16px;font-weight:700;background:#1a4a8a;color:#fff;border:none;border-radius:var(--radius);cursor:pointer;flex-shrink:0">OK</button>
     </div>
     <div class="csv-hint">
       Формат CSV бази: <code>штрихкод;назва;одиниця;ціна</code> — наприклад: <code>4820001234567;Молоко 1л;шт;45.90</code>
@@ -1246,6 +1247,7 @@
   const manualPanel  = document.getElementById('manualPanel');
 
   barcodeInput.addEventListener('keydown', e => { if(e.key === 'Enter') processBarcode(); });
+  document.getElementById('okBtn').addEventListener('click', () => processBarcode());
   document.getElementById('foundQty').addEventListener('keydown', e => { if(e.key === 'Enter') addFound(); });
   document.getElementById('mName').addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('mUnit').focus(); });
   document.getElementById('mQty').addEventListener('keydown', e => { if(e.key === 'Enter') addManual(); });
@@ -1287,7 +1289,8 @@
     manualPanel.classList.remove('show');
 
     // Show loading
-    const okBtn = document.querySelector('button[onclick="processBarcode()"]');
+    console.log('processBarcode called for:', bc);
+    const okBtn = document.getElementById('okBtn');
     if(okBtn) { okBtn.textContent = '…'; okBtn.disabled = true; }
 
     // 1. Check local CSV db first
@@ -1312,6 +1315,7 @@
           { signal: AbortSignal.timeout(8000) }
         );
         const d = await r.json();
+        console.log('OFF response status:', d.status, 'product:', d.product?.product_name);
         if(d.status === 1 && d.product) {
           const p = d.product;
           const name = p.product_name_uk || p.product_name_ru || p.product_name || '';
