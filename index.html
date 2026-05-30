@@ -1293,26 +1293,65 @@
     // 1. Check local CSV db first
     let item = db[bc] ? { ...db[bc], fromLocal: true } : null;
 
-    // 2. If not found locally — check Firebase
-    if(!item && window.firebaseLookupEAN) {
-      const fbData = await window.firebaseLookupEAN(bc);
-      if(fbData) {
-        item = { name: fbData.title, unit: fbData.unit || 'шт', price: 0, fromFirebase: true };
-        db[bc] = item; // cache
-      }
+    // 2. Check Firebase (якщо модуль вже завантажився)
+    if(!item && typeof window.firebaseLookupEAN === 'function') {
+      try {
+        const fbData = await window.firebaseLookupEAN(bc);
+        if(fbData && fbData.title) {
+          item = { name: fbData.title, unit: fbData.unit || 'шт', price: 0, fromFirebase: true };
+          db[bc] = item;
+        }
+      } catch(e) { console.log('Firebase lookup failed:', e); }
     }
 
-    // 3. If still not found — check Listex.info and auto-save to Firebase
-    if(!item && window.listexLookup) {
-      const lxData = await window.listexLookup(bc);
-      if(lxData) {
-        item = { name: lxData.title, unit: lxData.unit || 'шт', price: 0, fromListex: true };
-        db[bc] = item; // cache locally
-        // Auto-save to Firebase for future lookups
-        if(window.firebaseSaveProduct) {
-          window.firebaseSaveProduct(bc, lxData.title, lxData.unit);
+    // 3. Open Food Facts + UPC ItemDB (завжди доступно)
+    if(!item) {
+      try {
+        const r = await fetch(
+          'https://world.openfoodfacts.org/api/v2/product/' + bc + '.json?fields=product_name_uk,product_name_ru,product_name,quantity',
+          { signal: AbortSignal.timeout(8000) }
+        );
+        const d = await r.json();
+        if(d.status === 1 && d.product) {
+          const p = d.product;
+          const name = p.product_name_uk || p.product_name_ru || p.product_name || '';
+          if(name && name.length > 2) {
+            const qty = p.quantity || '';
+            const title = name + (qty ? ' ' + qty : '');
+            let unit = 'шт';
+            if(/кг|kg/i.test(qty+name)) unit = 'кг';
+            else if(/мл|ml/i.test(qty+name)) unit = 'мл';
+            else if(/[0-9]\s*л|[0-9]\s*l/i.test(qty+name)) unit = 'л';
+            else if(/[0-9]\s*г|[0-9]\s*g/i.test(qty+name)) unit = 'г';
+            item = { name: title, unit, price: 0, fromListex: true };
+            db[bc] = item;
+            if(typeof window.firebaseSaveProduct === 'function') {
+              window.firebaseSaveProduct(bc, title, unit);
+            }
+          }
         }
-      }
+      } catch(e) { console.log('OFF failed:', e.message); }
+    }
+
+    // 4. UPC Item DB як запасний варіант
+    if(!item) {
+      try {
+        const r2 = await fetch(
+          'https://api.upcitemdb.com/prod/trial/lookup?upc=' + bc,
+          { signal: AbortSignal.timeout(7000) }
+        );
+        const d2 = await r2.json();
+        if(d2.code === 'OK' && d2.items && d2.items[0]) {
+          const title = d2.items[0].title || '';
+          if(title.length > 2) {
+            item = { name: title, unit: 'шт', price: 0, fromListex: true };
+            db[bc] = item;
+            if(typeof window.firebaseSaveProduct === 'function') {
+              window.firebaseSaveProduct(bc, title, 'шт');
+            }
+          }
+        }
+      } catch(e) { console.log('UPC ItemDB failed:', e.message); }
     }
 
     if(okBtn) { okBtn.textContent = 'OK'; okBtn.disabled = false; }
