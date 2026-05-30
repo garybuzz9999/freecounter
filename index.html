@@ -50,8 +50,59 @@
       }
     };
 
+    // Save product to Firebase (auto-learn)
+    window.firebaseSaveProduct = async function(ean, title, unit) {
+      try {
+        const { setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+        const ref = doc(firestore, "products", ean);
+        await setDoc(ref, { ean, title, unit: unit || 'шт' }, { merge: true });
+        console.log("✅ Saved to Firebase:", ean, title);
+      } catch(e) {
+        console.error("Firebase save error:", e);
+      }
+    };
+
     window._firebaseReady = true;
     console.log("✅ Firebase connected to scancount-b39ed");
+  </script>
+
+  <!-- Listex lookup via CORS proxy -->
+  <script>
+    window.listexLookup = async function(ean) {
+      try {
+        // Use allorigins proxy to bypass CORS
+        const url = 'https://listex.info/uk/product/' + ean;
+        const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+        const resp = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
+        const data = await resp.json();
+        const html = data.contents || '';
+
+        // Extract product title from <h1> or og:title
+        let title = '';
+        const ogMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i);
+        if(ogMatch) title = ogMatch[1].replace(' - Listex','').replace(' | Listex','').trim();
+
+        if(!title) {
+          const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+          if(h1Match) title = h1Match[1].trim();
+        }
+
+        // Extract unit (шт/кг/л/г)
+        let unit = 'шт';
+        if(/(кг|kg)/i.test(title)) unit = 'кг';
+        else if(/(л|l)/i.test(title) && !/мл/i.test(title)) unit = 'л';
+        else if(/(мл|ml)/i.test(title)) unit = 'мл';
+        else if(/(г|g)/i.test(title) && !/кг/i.test(title)) unit = 'г';
+
+        if(title && title.length > 3 && !html.includes('404') && !html.includes('не знайдено')) {
+          return { title, unit };
+        }
+        return null;
+      } catch(e) {
+        console.error("Listex lookup error:", e);
+        return null;
+      }
+    };
   </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1243,10 +1294,25 @@
       }
     }
 
+    // 3. If still not found — check Listex.info and auto-save to Firebase
+    if(!item && window.listexLookup) {
+      const lxData = await window.listexLookup(bc);
+      if(lxData) {
+        item = { name: lxData.title, unit: lxData.unit || 'шт', price: 0, fromListex: true };
+        db[bc] = item; // cache locally
+        // Auto-save to Firebase for future lookups
+        if(window.firebaseSaveProduct) {
+          window.firebaseSaveProduct(bc, lxData.title, lxData.unit);
+        }
+      }
+    }
+
     if(okBtn) { okBtn.textContent = 'OK'; okBtn.disabled = false; }
 
     if(item) {
-      const badge = item.fromFirebase
+      const badge = item.fromListex
+        ? `<span style="font-size:11px;background:#fff3e0;color:#e65100;border-radius:4px;padding:2px 7px;font-weight:700">🌐 Listex</span>`
+        : item.fromFirebase
         ? `<span style="font-size:11px;background:#e8eef7;color:#1a4a8a;border-radius:4px;padding:2px 7px;font-weight:700">🔥 Firebase</span>`
         : `<span style="font-size:11px;background:#e6f4ec;color:#1a6640;border-radius:4px;padding:2px 7px;font-weight:700">📄 CSV</span>`;
       document.getElementById('foundInfo').innerHTML =
