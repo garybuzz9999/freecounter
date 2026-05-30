@@ -25,7 +25,22 @@
       try {
         const ref = doc(firestore, "products", ean);
         const snap = await getDoc(ref);
-        if(snap.exists()) return snap.data();
+        if(snap.exists()) {
+          const data = snap.data();
+          // title може бути на верхньому рівні або всередині stores.*.title
+          let title = data.title || '';
+          let unit = data.unit || 'шт';
+          if(!title && data.stores) {
+            const storeKeys = Object.keys(data.stores);
+            for(const sk of storeKeys) {
+              if(data.stores[sk] && data.stores[sk].title) {
+                title = data.stores[sk].title;
+                break;
+              }
+            }
+          }
+          if(title) return { title, unit };
+        }
         return null;
       } catch(e) {
         console.error("Firebase EAN lookup error:", e);
