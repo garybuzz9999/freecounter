@@ -6,6 +6,53 @@
   <title>Переоблік</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, query, where, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCCSQqjFSQIcRaZ-g8g003tKUE_TgOXOz8",
+      authDomain: "scancount-b39ed.firebaseapp.com",
+      projectId: "scancount-b39ed",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const firestore = getFirestore(app);
+
+    // Lookup by EAN — returns {title, unit, stores} or null
+    window.firebaseLookupEAN = async function(ean) {
+      try {
+        const ref = doc(firestore, "products", ean);
+        const snap = await getDoc(ref);
+        if(snap.exists()) return snap.data();
+        return null;
+      } catch(e) {
+        console.error("Firebase EAN lookup error:", e);
+        return null;
+      }
+    };
+
+    // Search by title — returns array of {ean, title, unit}
+    window.firebaseSearchTitle = async function(text) {
+      try {
+        const q = query(
+          collection(firestore, "products"),
+          where("title", ">=", text),
+          where("title", "<=", text + "\uf8ff"),
+          limit(10)
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ ean: d.id, ...d.data() }));
+      } catch(e) {
+        console.error("Firebase title search error:", e);
+        return [];
+      }
+    };
+
+    window._firebaseReady = true;
+    console.log("✅ Firebase connected to scancount-b39ed");
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1173,19 +1220,39 @@
     updateStats();
   }
 
-  function processBarcode() {
+  async function processBarcode() {
     const bc = barcodeInput.value.trim();
     if(!bc) return;
     pendingBarcode = bc;
     foundPanel.classList.remove('show');
     manualPanel.classList.remove('show');
 
-    if(db[bc]) {
-      const item = db[bc];
+    // Show loading
+    const okBtn = document.querySelector('button[onclick="processBarcode()"]');
+    if(okBtn) { okBtn.textContent = '…'; okBtn.disabled = true; }
+
+    // 1. Check local CSV db first
+    let item = db[bc] ? { ...db[bc], fromLocal: true } : null;
+
+    // 2. If not found locally — check Firebase
+    if(!item && window.firebaseLookupEAN) {
+      const fbData = await window.firebaseLookupEAN(bc);
+      if(fbData) {
+        item = { name: fbData.title, unit: fbData.unit || 'шт', price: 0, fromFirebase: true };
+        db[bc] = item; // cache
+      }
+    }
+
+    if(okBtn) { okBtn.textContent = 'OK'; okBtn.disabled = false; }
+
+    if(item) {
+      const badge = item.fromFirebase
+        ? `<span style="font-size:11px;background:#e8eef7;color:#1a4a8a;border-radius:4px;padding:2px 7px;font-weight:700">🔥 Firebase</span>`
+        : `<span style="font-size:11px;background:#e6f4ec;color:#1a6640;border-radius:4px;padding:2px 7px;font-weight:700">📄 CSV</span>`;
       document.getElementById('foundInfo').innerHTML =
-        `<span class="badge found">В базі</span>&nbsp; <strong>${escHtml(item.name)}</strong>
-         &nbsp;·&nbsp; ${escHtml(item.unit)}
-         &nbsp;·&nbsp; <span class="price-tag">${item.price.toFixed(2)} грн</span>`;
+        badge + '&nbsp; <strong>' + escHtml(item.name) + '</strong>' +
+        ' &nbsp;·&nbsp; ' + escHtml(item.unit) +
+        (item.price ? ' &nbsp;·&nbsp; <span class="price-tag">' + item.price.toFixed(2) + ' грн</span>' : '');
       foundPanel.classList.add('show');
       const qEl = document.getElementById('foundQty');
       qEl.value = 1;
