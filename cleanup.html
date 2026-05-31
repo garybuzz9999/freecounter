@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Очистка бази</title>
+<style>
+  body { font-family: monospace; background: #1a1a1a; color: #e0e0e0; padding: 20px; }
+  button { background: #c62828; color: #fff; border: none; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 4px; }
+  button:disabled { background: #555; }
+  #log { background: #0a0a0a; padding: 16px; border-radius: 8px; margin-top: 16px; height: 400px; overflow-y: auto; font-size: 13px; }
+  .ok { color: #4caf50; } .err { color: #f44336; } .info { color: #64b5f6; }
+</style>
+</head>
+<body>
+<h2>🗑️ Очистка колекції products</h2>
+<p>Видалить всі старі документи з неправильними EAN</p>
+<button id="btn" onclick="startClean()">🗑️ Очистити базу</button>
+<div id="status">Готовий</div>
+<div id="log"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, writeBatch, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCCSQqjFSQIcRaZ-g8g003tKUE_TgOXOz8",
+  authDomain: "scancount-b39ed.firebaseapp.com",
+  projectId: "scancount-b39ed",
+});
+const db = getFirestore(app);
+
+function log(msg, cls='info') {
+  const el = document.getElementById('log');
+  el.innerHTML += '<div class="'+cls+'">'+msg+'</div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+window.startClean = async function() {
+  document.getElementById('btn').disabled = true;
+  log('Отримуємо список документів...');
+  
+  try {
+    let total = 0;
+    let hasMore = true;
+    
+    while(hasMore) {
+      const snap = await getDocs(collection(db, 'products'));
+      if(snap.empty) { hasMore = false; break; }
+      
+      const batch = writeBatch(db);
+      let count = 0;
+      snap.docs.forEach(d => {
+        batch.delete(doc(db, 'products', d.id));
+        count++;
+      });
+      await batch.commit();
+      total += count;
+      log('🗑️ Видалено ' + total + ' документів...', 'ok');
+      document.getElementById('status').textContent = 'Видалено: ' + total;
+      
+      if(snap.docs.length < 100) hasMore = false;
+      await new Promise(r => setTimeout(r, 500));
+    }
+    
+    log('✅ База очищена! Всього видалено: ' + total, 'ok');
+    document.getElementById('status').textContent = '✅ Готово! Тепер запускай import1.html';
+  } catch(e) {
+    log('❌ Помилка: ' + e.message, 'err');
+  }
+  document.getElementById('btn').disabled = false;
+};
+</script>
+</body>
+</html>
