@@ -1,8 +1,6 @@
 name: Import to Firebase
-
 on:
   workflow_dispatch:
-
 jobs:
   import:
     runs-on: ubuntu-latest
@@ -11,7 +9,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - run: npm install firebase-admin
+      - run: npm install google-auth-library
       - run: node import_script.js
         env:
           FIREBASE_KEY: ${{ secrets.FIREBASE_KEY }}
